@@ -1,13 +1,13 @@
-# Consumer Churn Classification
+# 📱 Consumer Churn Classification
 
-An Artificial Intelligence laboratory project focused on building an end-to-end machine learning pipeline to predict consumer churn based on demographic and behavioral attributes.
+An AI laboratory project focused on building an end-to-end machine learning pipeline to predict customer churn based on demographic and behavioral data.
 
 ---
 
 ## 📌 Project Overview
-Consumer churn is a critical challenge across industries because it directly impacts business profitability. This project implements a full machine learning pipeline—encompassing dataset preprocessing, exploratory data analysis (EDA), supervised model training, and unsupervised clustering—to predict whether a consumer will churn or not. 
+Customer churn happens when customers stop doing business with a company. This project builds a complete machine learning pipeline (including data cleaning, data exploration, supervised model training, and unsupervised clustering) to predict whether a consumer will leave or stay. 
 
-The primary objective was to establish the pipeline and rigorously evaluate predictive models, identifying how dataset properties and weak feature correlations influence model generalizability.
+The main goal was to test how well different models perform when the dataset features have very weak connections to the final target.
 
 ---
 
@@ -18,39 +18,36 @@ The primary objective was to establish the pipeline and rigorously evaluate pred
 ---
 
 ## 📊 Dataset Profile
-* **Dataset Size:** ~1,500 records (rows)
+* **Dataset Size:** ~1,500 rows
 * **Problem Type:** Binary Classification
-* **Target Variable (`Churn`):** * `0` = Not churned
-  * `1` = Churned
-* **Features Matrix:**
-  * **Quantitative (Numerical):** `Age`, `Income`, `Credit_Score`, `Num_Purchases`, `Membership_Years`.
-  * **Categorical:** `Gender`, `Marital_Status`, `Device_Used`.
+* **Target Variable (`Churn`):** `0` = Stayed, `1` = Left
+* **Features:**
+  * **Numerical:** `Age`, `Income`, `Credit_Score`, `Num_Purchases`, `Membership_Years`
+  * **Categorical:** `Gender`, `Marital_Status`, `Device_Used`
 
 ---
 
-## 🛠⚙️ Data Preprocessing Pipeline
-To resolve data anomalies and prepare features for optimal algorithm performance, the following preprocessing steps were systematically applied:
+## 🛠️ Data Preprocessing Pipeline
+The following steps prepare the raw features for training:
 
 1. **Handling Invalid & Missing Values:**
-   * Numerical constraints were applied to isolate anomalies (e.g., age $< 0$ or $> 120$, credit scores outside the standard $300	ext{--}850$ window, and negative membership years). These outliers were transformed to null markers.
-   * **Numerical Imputation:** Handled using a **K-Nearest Neighbors (KNN) Imputer** to deduce missing values based on spatial similarities.
-   * **Categorical Imputation:** Replaced missing values using the **Most Frequent** (mode) strategy.
-2. **Categorical Encoding:**
-   * Features like `Gender`, `Marital_Status`, and `Device_Used` were transformed into a numerical format via **One-Hot Encoding** to generate binary indicators.
-3. **Feature Scaling:**
-   * Since distance-based models (KNN) and Multi-Layer Perceptrons (MLPs) are highly sensitive to numeric ranges, all numerical features were normalized using **MinMaxScaler** into a fixed boundaries scale of `[0, 1]`.
+   * Filtered incorrect data (Age outside 0 to 120, Credit Score outside 300 to 850, negative membership years) and marked them as null.
+   * **Numerical Imputation:** Filled missing numbers using a **KNN Imputer** based on data similarities.
+   * **Categorical Imputation:** Filled missing text using the **Most Frequent** value (mode).
+2. **Categorical Encoding:** Converted text data (`Gender`, `Marital_Status`, `Device_Used`) into 0 and 1 columns using **One-Hot Encoding**.
+3. **Feature Scaling:** Normalized all numerical values between `0` and `1` using **MinMaxScaler** to help distance-based models perform correctly.
 
 ---
 
-## 🔍 Key Exploratory Data Analysis (EDA) Insights
-* **Dataset Balance:** A target variable distribution analysis confirmed that both churn and non-churn classes are virtually equal in size. Consequently, no artificial oversampling (e.g., SMOTE) or undersampling was needed.
-* **Feature Distributions:** Distribution plots revealed explicit skewness in `Income` and `Num_Purchases`, while boxplots isolated explicit data outliers in `Income` and `Age`.
-* **Predictive Signal Strengths:** A compiled correlation heatmap across numerical parameters indicated remarkably weak correlations between the target variable (`Churn`) and all input features (e.g., `Credit_Score` and `Income` were only marginally related to churn). This high feature overlap between the two target classes explains why standard linear or distance boundaries struggle to partition the data easily.
+## 🔍 Key Data Exploration Insights
+* **Dataset Balance:** The dataset is perfectly balanced between both classes (churned vs. stayed). No oversampling (SMOTE) was needed.
+* **Data Distributions:** `Income` and `Num_Purchases` are highly skewed, with clear outliers visible in `Income` and `Age`.
+* **Weak Signal Strengths:** A correlation heatmap revealed that input features share almost no relationship with the `Churn` label. Because data points for both classes overlap heavily, standard machine learning boundaries struggle to split the data effectively.
 
 ---
 
 ## 📐 Dataset Splitting
-The preprocessed data was partitioned via **Stratified Sampling** to guarantee identical target class distributions across all subsets:
+The data was split using stratified sampling to maintain identical class ratios across all sets:
 * **Training Set:** 70%
 * **Validation Set:** 15%
 * **Testing Set:** 15%
@@ -60,44 +57,31 @@ The preprocessed data was partitioned via **Stratified Sampling** to guarantee i
 ## 🤖 Model Implementations & Configurations
 
 ### A. Supervised Learning
-1. **K-Nearest Neighbors (KNN):**
-   * **Hyperparameter Tuning:** $k = 5$ neighbors.
-   * **Observation:** Performance suffered due to high class overlaps in the local multi-dimensional feature space.
-2. **Decision Tree Classifier:**
-   * **Hyperparameter Tuning:** `max_depth = 5`, `min_samples_split = 10`.
-   * **Observation:** Pruning was crucial; larger depths immediately led to overfitting without capturing real predictive patterns.
-3. **Neural Network (Multi-Layer Perceptron):**
-   * **Architecture Layers:** Hidden layer configuration of `[(32,), (64,), (64, 32)]`.
-   * **Activation Function:** `ReLU`
-   * **Optimization Algorithm:** `Adam` (Maximum iterations bound: `500`).
-   * **Observation:** Performance hovered near random guessing due to uninformative feature mappings.
+1. **K-Nearest Neighbors (KNN):** Configured with k = 5. Performance was low due to high class overlaps in the local data space.
+2. **Decision Tree:** Limited to `max_depth = 5` and `min_samples_split = 10`. Keeping the tree small was necessary to prevent immediate overfitting.
+3. **Neural Network (MLP):** Built with three hidden layers `[32, 64, (64, 32)]`, `ReLU` activation, and the `Adam` optimizer (500 iterations). Results hovered near random guessing due to uninformative features.
 
 ### B. Unsupervised Learning
-* **K-Means Clustering:**
-   * **Optimization:** Evaluated via Silhouette Score where $k = 2$ was verified as optimal.
-   * **Silhouette Score:** `0.3235` (indicating poor spatial cluster separation).
-   * **Pseudo-Accuracy Evaluation:** Mapping the clusters to actual labels by majority vote produced a validation accuracy of ~48% and a test accuracy of ~50%, verifying that natural geometric clusters do not correspond cleanly with churn parameters.
+* **K-Means Clustering:** Optimized at k = 2 clusters. It achieved a low Silhouette Score of `0.3235` (heavy cluster overlap) and yielded a poor ~50% test accuracy when mapped to actual labels.
 
 ---
 
 ## 📉 Evaluation Summary & Benchmarks
-
-The predictive performance on the test set across all evaluated frameworks is summarized below:
 
 | Model Architecture | Test Accuracy | Precision / Recall | ROC-AUC |
 | :--- | :---: | :---: | :---: |
 | **K-Nearest Neighbors (KNN)** | ~53.00% | ~0.50 / ~0.50 | ~0.55 |
 | **Decision Tree** | ~53.44% | ~0.52 / ~0.51 | ~0.54 |
 | **Neural Network (MLP)** | ~52.44% | ~0.52 / ~0.53 | ~0.51 |
-| **K-Means (Pseudo-Labeling)**| ~50.00% | Consolidated Baseline | — |
+| **K-Means (Clustering)**| ~50.00% | Baseline Comparison | Baseline |
 
-### 🛑 Performance Analysis & Challenges
-All models scored close to the 50% baseline marker (equivalent to a random guess). The underlying challenge is entirely attributed to **dataset quality and weak feature predictive signaling**, rather than implementation flaws. The feature feature overlaps severely inhibit high-margin geometric boundaries. 
+### ⚠️ Performance Analysis & Challenges
+Every model scored close to the 50% baseline mark, which is equivalent to a random coin toss. This performance barrier is caused entirely by **weak feature signals and poor dataset quality** rather than pipeline execution flaws. 
 
 ---
 
 ## 🔮 Future Enhancements
-To scale predictive accuracy beyond current thresholds, future versions should explore:
-1. **Advanced Ensemble Methods:** Implementing robust ensemble learning variants like **Random Forest** or **Gradient Boosting (XGBoost/LightGBM)** to find complex non-linear relationships.
-2. **Feature Engineering:** Developing derived interaction properties (e.g., custom combinations like `Purchases_per_year` or `Income_per_purchase`) to see if stronger separation patterns emerge.
-3. **Data Augmentation:** Collecting richer contextual behavioral information to reduce current distribution overlaps.
+To break past the 50% accuracy limit, future iterations will focus on:
+1. **Advanced Ensemble Methods:** Deploying robust models like **Random Forest**, **XGBoost**, or **LightGBM** to discover complex, non-linear patterns.
+2. **Feature Engineering:** Creating derived metrics (e.g., `Purchases_per_year` or `Income_per_purchase`) to find stronger separation lines.
+3. **Data Augmentation:** Gathering deeper behavioral data to reduce the current class overlaps.
